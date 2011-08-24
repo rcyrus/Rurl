@@ -34,12 +34,12 @@ Using a parser to analyze the results as it comes down the wire.
 	http_request = lambda {
       connection         = Rurl.new(url, MAX_SECONDS)
       connection.headers = LISA_HTTP_HEADER
-      connection.on_body do |data|
-         parser << data
-      end
 
       begin
-        connection.perform
+        connection.perform do |data|
+	         parser << data
+		end
+		
       rescue Nokogiri::XML::SyntaxError => se
         log "#{se.class}: Error: #{se}: URL: #{url}"
       end

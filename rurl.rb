@@ -11,7 +11,8 @@ java_import java.io.DataInputStream
 java_import com.lisa.http.params.HttpConnectionParams
 
 class Rurl
-  attr_reader :body_str
+  attr_reader :body_str, :content_type
+  CHUNK_SIZE = 1048576
 
   def initialize(url, time_out=15.seconds)
     cm     = ConnManager.instance.connection
@@ -22,7 +23,6 @@ class Rurl
     @httpclient = DefaultHttpClient.new(cm, params)
     @method     = HttpGet.new url
     @body_str   = ''
-    @on_body    = lambda { |data| @body_str << data }
   end
 
   def headers=(h)
@@ -31,31 +31,29 @@ class Rurl
     }
   end
 
-  def on_body(&block)
-    @on_body = block
-  end
-
   def perform
     begin
-      response    = @httpclient.execute @method
-      entity      = response.getEntity
-      in_stream   = entity.getContent
-      data_stream = DataInputStream.new(in_stream)
-      rd          = BufferedReader.new(InputStreamReader.new data_stream)
+      response      = @httpclient.execute @method
+      entity        = response.getEntity
+      java_ins      = entity.getContent
+      in_stream     = java_ins.to_io
+      @content_type = entity.getContentType.getValue
 
-      while (line = rd.readLine)
-        begin
-          @on_body.call(line)
-          #rescue => e
-          #  #derp
-          #end
+      if block_given?
+        while !in_stream.eof?
+          yield(in_stream.readpartial(CHUNK_SIZE))
+        end
+      else
+        while !in_stream.eof?
+          @body_str << in_stream.readpartial(CHUNK_SIZE)
         end
       end
+ 
     rescue => e
-      @method.abort
       raise e
     ensure
-      in_stream.close() if in_stream
+      java_ins.close() if java_ins
+      in_stream.close if in_stream
       EntityUtils.consume entity if entity
     end
   end

@@ -51,6 +51,10 @@ Using a parser to analyze the results as it comes down the wire.
 	
 NoteL `SearchResultsDocument` isa Nokogiri::XML::SAX::Document that helps us parse our xml. and `LISA_HTTP_HEADER` is simply our connection headers. 
 
+# ConnManager #
+It is possible to use ConnManager on it's own if you just want something that can supply you with an httpconnection. 
+
+ConnManager will serve up DefaultHttpClients all day long, change the code if you want something fancier. 
 
 # Later #
 I hope this helps someone out, or if you can help me out by pointing out bugs or better ways of doing things with this code let me know! 

@@ -18,10 +18,15 @@ class ConnManager
     http = Scheme.new("http", 80, PlainSocketFactory.getSocketFactory())
     sr   = SchemeRegistry.new()
     sr.register(http)
-    @connection = ThreadSafeClientConnManager.new(sr, 5, TimeUnit::SECONDS)
-    @connection.setMaxTotal 200
-    @connection.setDefaultMaxPerRoute 20
-    connKiller = IdleConnectionKiller.new(@connection)
+    @cm = ThreadSafeClientConnManager.new(sr, 5, TimeUnit::SECONDS)
+    @cm.setMaxTotal 200
+    @cm.setDefaultMaxPerRoute 20
+
+    params = com.lisa.http.params.BasicHttpParams.new()
+    HttpConnectionParams.setConnectionTimeout(params, TimeUnit::SECONDS.toMillis(30.to_i))
+    HttpConnectionParams.setSoTimeout(params, TimeUnit::SECONDS.toMillis(30.to_i))
+    @httpclient = DefaultHttpClient.new(@cm, params)
+    connKiller = IdleConnectionKiller.new(@cm)
     connKiller.start()
   end
 

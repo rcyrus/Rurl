@@ -15,12 +15,7 @@ class Rurl
   CHUNK_SIZE = 1048576
 
   def initialize(url, time_out=15.seconds)
-    cm     = ConnManager.instance.connection
-    params = com.lisa.http.params.BasicHttpParams.new()
-    HttpConnectionParams.setConnectionTimeout(params, TimeUnit::SECONDS.toMillis(time_out.to_i))
-    HttpConnectionParams.setSoTimeout(params, TimeUnit::SECONDS.toMillis(time_out.to_i))
-    @url        = url
-    @httpclient = DefaultHttpClient.new(cm, params)
+    @httpclient = ConnManager.instance.httpclient
     @method     = HttpGet.new url
     @body_str   = ''
   end
